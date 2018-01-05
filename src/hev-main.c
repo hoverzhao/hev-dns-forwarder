@@ -87,7 +87,7 @@ main (int argc, char **argv)
 	if (listen_port == NULL) {
 		listen_port = strdup(default_listen_port);
 	}
-
+/* 消息处理主循环 */
 	loop = hev_event_loop_new ();
 
 /* 忽略SIGPIPE信号引起的程序中断，该信号在 fd 操作reset产生，比如网络链接传输关闭 */
