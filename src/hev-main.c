@@ -90,10 +90,13 @@ main (int argc, char **argv)
 
 	loop = hev_event_loop_new ();
 
+/* 忽略SIGPIPE信号引起的程序中断，该信号在 fd 操作reset产生，比如网络链接传输关闭 */
 	signal (SIGPIPE, SIG_IGN);
 
+/* 在按下ctrl-c时，或kill 2时，触发SIGINT信号, ,本程序阻塞该信号，延时处理*/
 	source = hev_event_source_signal_new (SIGINT);
 	hev_event_source_set_priority (source, 3);
+/* 信号延迟处理函数signal_handle，停止loop循环 释放fdlist */
 	hev_event_source_set_callback (source, signal_handler, loop, NULL);
 	hev_event_loop_add_source (loop, source);
 	hev_event_source_unref (source);

@@ -81,7 +81,9 @@ hev_event_source_signal_new (int signal)
 
 	sigemptyset (&mask);
 	sigaddset (&mask, signal);
+    /* SIG_BLOCK: 当有信号发生时，交给程序处理,比如kill(3),默认是中断程序，交给程序内部处理，就不会产生中断 */
 	sigprocmask(SIG_BLOCK, &mask, NULL);
+    /* SFD_NONBLOCK: 当fd read或write卡住时，调用函数立即返回-1或EAGAIN错误 */
 	fd = signalfd (-1, &mask, SFD_NONBLOCK);
 	if (-1 == fd)
 	  return NULL;
@@ -109,6 +111,7 @@ hev_event_source_signal_check (HevEventSource *source, HevEventSourceFD *fd)
 		int size = read (self->signal_fd, &siginfo, sizeof (struct signalfd_siginfo));
 		if (-1 == size) {
 			if (EAGAIN == errno)
+            /*移除EPOLLIN标志位 */
 			  fd->revents &= ~EPOLLIN;
 			return false;
 		}

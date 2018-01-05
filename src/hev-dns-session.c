@@ -257,6 +257,8 @@ dns_read_request (HevDNSSession *self)
 	struct iovec iovec[2];
 	unsigned short *plen;
 
+/* Question: 为什么要先写入两个字节 ? */
+/* Answer: 写入的是udp报文长度，udp报文头含有长度，tcp报文头没有长度 ？*/
 	hev_ring_buffer_writing (self->forward_buffer, iovec);
 	hev_ring_buffer_write_finish (self->forward_buffer, 2);
 	size = read_data (self->cfd, self->forward_buffer, &self->client_addr);
