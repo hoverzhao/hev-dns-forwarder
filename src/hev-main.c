@@ -13,10 +13,13 @@
 #include <string.h>
 
 #include "hev-main.h"
+#include "hev-memory-allocator.h"
+#include "hev-memory-allocator-slice.h"
 #include "hev-dns-forwarder.h"
 #include "hev-event-source-signal.h"
 
 static const char *default_dns_servers = "8.8.8.8:53";
+/* static const char *default_dns_servers = "114.114.114.114:53"; */
 static const char *default_dns_port = "53";
 static const char *default_listen_addr = "0.0.0.0";
 static const char *default_listen_port = "5300";
@@ -37,6 +40,7 @@ Forwarding DNS queries on TCP transport.\n\
 static bool
 signal_handler (void *data)
 {
+    printf(" recive singnal to quit! \n " );
 	HevEventLoop *loop = data;
 	hev_event_loop_quit (loop);
 	return false;
@@ -87,6 +91,12 @@ main (int argc, char **argv)
 	if (listen_port == NULL) {
 		listen_port = strdup(default_listen_port);
 	}
+
+/* 初始化内存分配器*/
+    /* HevMemoryAllocator * pAllocator = hev_memory_allocator_slice_new (); */
+    /* if(pAllocator) */
+    /*     hev_memory_allocator_set_default (pAllocator); */
+    
 /* 消息处理主循环 */
 	loop = hev_event_loop_new ();
 
@@ -108,7 +118,7 @@ main (int argc, char **argv)
 	}
 
 	hev_event_loop_unref (loop);
-
+    /* hev_memory_allocator_unref (pAllocator); */
 	return 0;
 }
 

@@ -60,23 +60,25 @@ hev_event_source_ref (HevEventSource *self)
 	return NULL;
 }
 
+static void
+fds_free_handler (void *data)
+{
+	_hev_event_source_fd_clear_source (data);
+	_hev_event_source_fd_unref (data);
+}
+
 void
 hev_event_source_unref (HevEventSource *self)
 {
 	if (self) {
 		self->ref_count --;
 		if (0 == self->ref_count) {
-			HevSList *list = NULL;
 			self->funcs.finalize (self);
 			if (self->name)
 			  HEV_MEMORY_ALLOCATOR_FREE (self->name);
 			if (self->callback.notify)
 			  self->callback.notify (self->callback.data);
-			for (list=self->fds; list; list=hev_slist_next (list)) {
-				_hev_event_source_fd_clear_source (hev_slist_data (list));
-				_hev_event_source_fd_unref (hev_slist_data (list));
-			}
-			hev_slist_free (self->fds);
+			hev_slist_free_notify (self->fds, fds_free_handler);
 			HEV_MEMORY_ALLOCATOR_FREE (self);
 		}
 	}
@@ -135,7 +137,7 @@ hev_event_source_add_fd (HevEventSource *self, int fd, uint32_t events)
 		}
 		HevEventSourceFD *efd = _hev_event_source_fd_new (self, fd, events);
 		if (efd) {
-			self->fds = hev_slist_append (self->fds, efd);
+			self->fds = hev_slist_prepend (self->fds, efd);
 			if (self->loop && !_hev_event_loop_add_fd (self->loop, efd)) {
 				_hev_event_source_fd_unref (efd);
 				efd = NULL;
@@ -151,9 +153,9 @@ bool
 hev_event_source_del_fd (HevEventSource *self, int fd)
 {
 	if (self) {
-		HevSList *list = NULL;
 		HevEventSourceFD *rfd = NULL;
-		for (list=self->fds; list; list=hev_slist_next (list)) {
+		HevSList *list = NULL, *prev = NULL;
+		for (list=self->fds; list; prev=list,list=hev_slist_next (list)) {
 			HevEventSourceFD *efd = hev_slist_data (list);
 			if (efd->fd == fd) {
 				rfd = efd;
@@ -162,7 +164,7 @@ hev_event_source_del_fd (HevEventSource *self, int fd)
 		}
 		if (rfd) {
 			bool res = false;
-			self->fds = hev_slist_remove (self->fds, rfd);
+			self->fds = hev_slist_remove_next (self->fds, prev);
 			if (self->loop)
 			  res = _hev_event_loop_del_fd (self->loop, rfd);
 			_hev_event_source_fd_clear_source (rfd);

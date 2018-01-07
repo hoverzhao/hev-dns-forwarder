@@ -1,0 +1,32 @@
+git clone 
+git config --global core.editor "vim"
+git config --global user.name "hoverzhao"
+git config --global user.email painton@tom.com
+
+vimdiff 
+    co cp yy 操作
+
+git add .
+git commit .
+
+git commit -am .
+git checkout . //在没add的情况下，恢复修改
+
+vim .git/config : ssh://git@github.com/hoverzhao/xxxx
+
+git push origin master
+
+git log --stat author=hoverzhao 查看提交历史
+gt  reflog  查看命令历史 以便回到最新版本 
+
+
+git reset --hard HEAD^   回退上一版本 HEAD^^
+git reset --hard <commitid>
+
+
+git branch -a 查看全部分支 
+git branch  查看本地分支
+
+
+
+git pull origin master == git fetch origin master  + git merge origin/master

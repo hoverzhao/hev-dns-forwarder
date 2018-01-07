@@ -10,15 +10,29 @@
 #include <string.h>
 #include "hev-memory-allocator.h"
 
+static HevMemoryAllocator *default_allocator;
+
+static void * _hev_memory_allocator_alloc (HevMemoryAllocator *self, size_t size);
+static void _hev_memory_allocator_free (HevMemoryAllocator *self, void *ptr);
+
 HevMemoryAllocator *
 hev_memory_allocator_default (void)
 {
-	static HevMemoryAllocator *allocator = NULL;
+	if (!default_allocator)
+	  default_allocator = hev_memory_allocator_new ();
 
-	if (!allocator)
-	  allocator = hev_memory_allocator_new ();
+	return default_allocator;
+}
 
-	return allocator;
+HevMemoryAllocator *
+hev_memory_allocator_set_default (HevMemoryAllocator *allocator)
+{
+	HevMemoryAllocator *old_allocator;
+
+	old_allocator = default_allocator;
+	default_allocator = allocator;
+
+	return old_allocator;
 }
 
 HevMemoryAllocator *
@@ -27,8 +41,13 @@ hev_memory_allocator_new (void)
 	HevMemoryAllocator *self = NULL;
 
 	self = malloc (sizeof (HevMemoryAllocator));
-	if (self)
-	  self->ref_count = 1;
+	if (!self)
+	  return NULL;
+
+	self->ref_count = 1;
+	self->alloc = _hev_memory_allocator_alloc;
+	self->free = _hev_memory_allocator_free;
+	self->destroy = NULL;
 
 	return self;
 }
@@ -36,34 +55,44 @@ hev_memory_allocator_new (void)
 HevMemoryAllocator *
 hev_memory_allocator_ref (HevMemoryAllocator *self)
 {
-	if (self) {
-		self->ref_count ++;
-		return self;
-	}
-
-	return NULL;
+	self->ref_count ++;
+	return self;
 }
 
 void
 hev_memory_allocator_unref (HevMemoryAllocator *self)
 {
-	if (self) {
-		self->ref_count --;
-		if (0 == self->ref_count)
-		  free (self);
-	}
+	self->ref_count --;
+	if (0 < self->ref_count)
+	  return;
+
+	if (self->destroy)
+	  self->destroy (self);
+	free (self);
+}
+
+static void *
+_hev_memory_allocator_alloc (HevMemoryAllocator *self, size_t size)
+{
+	return malloc (size);
 }
 
 void *
 hev_memory_allocator_alloc (HevMemoryAllocator *self, size_t size)
 {
-	return malloc (size);
+	return self->alloc (self, size);
+}
+
+static void
+_hev_memory_allocator_free (HevMemoryAllocator *self, void *ptr)
+{
+	free (ptr);
 }
 
 void
 hev_memory_allocator_free (HevMemoryAllocator *self, void *ptr)
 {
-	free (ptr);
+	return self->free (self, ptr);
 }
 
 void *

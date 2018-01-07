@@ -34,7 +34,7 @@ hev_slist_append (HevSList *self, void *data)
 		}
 	}
 
-	return NULL;
+	return self;
 }
 
 HevSList *
@@ -51,7 +51,7 @@ hev_slist_prepend (HevSList *self, void *data)
 		return new;
 	}
 
-	return NULL;
+	return self;
 }
 
 HevSList *
@@ -85,7 +85,7 @@ hev_slist_insert (HevSList *self, void *data, unsigned int position)
 		}
 	}
 
-	return NULL;
+	return self;
 }
 
 HevSList *
@@ -118,7 +118,25 @@ hev_slist_insert_before (HevSList *self, void *data, HevSList *sibling)
 		}
 	}
 
-	return NULL;
+	return self;
+}
+
+HevSList *
+hev_slist_insert_after (HevSList *self, void *data, HevSList *sibling)
+{
+	HevSList *new = HEV_MEMORY_ALLOCATOR_ALLOC (sizeof (HevSList));
+	if (new) {
+		new->data = data;
+		if (sibling) {
+			new->next = sibling->next;
+			sibling->next = new;
+			return self;
+		}
+		new->next = self;
+		return new;
+	}
+
+	return self;
 }
 
 HevSList *
@@ -159,6 +177,25 @@ hev_slist_remove_all (HevSList *self, const void *data)
 			} else {
 				prev = curr;
 			}
+		}
+		return self;
+	}
+
+	return NULL;
+}
+
+HevSList *
+hev_slist_remove_next (HevSList *self, HevSList *sibling)
+{
+	if (self) {
+		if (!sibling) {
+			HEV_MEMORY_ALLOCATOR_FREE (self);
+			return self->next;
+		}
+		if (sibling->next) {
+			HevSList *next = sibling->next;
+			sibling->next = next->next;
+			HEV_MEMORY_ALLOCATOR_FREE (next);
 		}
 		return self;
 	}
@@ -208,6 +245,21 @@ hev_slist_free (HevSList *self)
 		for (node=self; node;) {
 			HevSList *curr = node;
 			node = node->next;
+			HEV_MEMORY_ALLOCATOR_FREE (curr);
+		}
+	}
+}
+
+void
+hev_slist_free_notify (HevSList *self, HevDestroyNotify notify)
+{
+	if (self) {
+		HevSList *node = NULL;
+		for (node=self; node;) {
+			HevSList *curr = node;
+			node = node->next;
+			if (notify)
+			  notify (curr->data);
 			HEV_MEMORY_ALLOCATOR_FREE (curr);
 		}
 	}

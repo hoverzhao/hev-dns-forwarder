@@ -10,14 +10,18 @@
 #ifndef __HEV_SLIST_H__
 #define __HEV_SLIST_H__
 
+#include "hev-memory-allocator.h"
+
 typedef struct _HevSList HevSList;
 
 HevSList * hev_slist_append (HevSList *self, void *data);
 HevSList * hev_slist_prepend (HevSList *self, void *data);
 HevSList * hev_slist_insert (HevSList *self, void *data, unsigned int position);
 HevSList * hev_slist_insert_before (HevSList *self, void *data, HevSList *sibling);
+HevSList * hev_slist_insert_after (HevSList *self, void *data, HevSList *sibling);
 HevSList * hev_slist_remove (HevSList *self, const void *data);
 HevSList * hev_slist_remove_all (HevSList *self, const void *data);
+HevSList * hev_slist_remove_next (HevSList *self, HevSList *sibling);
 
 HevSList * hev_slist_last (HevSList *self);
 HevSList * hev_slist_next (HevSList *self);
@@ -38,6 +42,7 @@ hev_slist_set_data (HevSList *self, void *data)
 unsigned int hev_slist_length (HevSList *self);
 
 void hev_slist_free (HevSList *self);
+void hev_slist_free_notify (HevSList *self, HevDestroyNotify notify);
 
 #endif /* __HEV_SLIST_H__ */
 

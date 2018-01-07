@@ -18,16 +18,24 @@
 #define HEV_MEMORY_ALLOCATOR_FREE(ptr) \
 	hev_memory_allocator_free (HEV_MEMORY_ALLOCATOR_DEFAULT, ptr)
 
-typedef void (*HevDestroyNotify) (void *data);
-
 typedef struct _HevMemoryAllocator HevMemoryAllocator;
+
+typedef void (*HevDestroyNotify) (void *data);
+typedef void * (*HevMemoryAllocatorAlloc) (HevMemoryAllocator *self, size_t size);
+typedef void (*HevMemoryAllocatorFree) (HevMemoryAllocator *self, void *ptr);
+typedef void (*HevMemoryAllocatorDestroy) (HevMemoryAllocator *self);
 
 struct _HevMemoryAllocator
 {
+	HevMemoryAllocatorAlloc alloc;
+	HevMemoryAllocatorFree free;
+	HevMemoryAllocatorDestroy destroy;
+
 	unsigned int ref_count;
 };
 
 HevMemoryAllocator * hev_memory_allocator_default (void);
+HevMemoryAllocator * hev_memory_allocator_set_default (HevMemoryAllocator *allocator);
 
 HevMemoryAllocator * hev_memory_allocator_new (void);
 
