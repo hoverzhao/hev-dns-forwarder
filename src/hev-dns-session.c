@@ -222,7 +222,8 @@ remote_read (HevDNSSession *self)
 			}
 		} else if (0 == size) {
            /* bug fix： return true ，使读到0字节后，能够继续pipleline  */
-			return true;
+			/* return true; */
+            return false;
 		}
 	} else {
 		self->remote_fd->revents &= ~EPOLLIN;
